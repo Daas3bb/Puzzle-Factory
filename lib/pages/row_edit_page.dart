@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/puzzle_provider.dart';
 import '../utils/image_exporter.dart';
+import '../widgets/puzzle_image.dart';
 import 'export_page.dart';
 
 class RowEditPage extends StatefulWidget {
@@ -70,7 +70,6 @@ class _RowEditPageState extends State<RowEditPage> {
     final spacing = provider.spacing.toDouble();
     final radius = provider.borderRadius;
     final bg = provider.backgroundColor;
-    final count = provider.imageCount.clamp(1, 3);
 
     return Container(
       decoration: BoxDecoration(
@@ -80,14 +79,13 @@ class _RowEditPageState extends State<RowEditPage> {
       padding: EdgeInsets.all(spacing),
       child: Row(
         children: List.generate(3, (index) {
-          final path = index < count ? provider.imagePathAt(index) : null;
           return Expanded(
             child: Padding(
               padding: EdgeInsets.only(
                 left: index > 0 ? spacing / 2 : 0,
                 right: index < 2 ? spacing / 2 : 0,
               ),
-              child: _buildRowCell(path, radius, bg),
+              child: _buildRowCell(provider.imageBytesAt(index), radius, bg),
             ),
           );
         }),
@@ -95,8 +93,8 @@ class _RowEditPageState extends State<RowEditPage> {
     );
   }
 
-  Widget _buildRowCell(String? imagePath, double radius, Color bg) {
-    if (imagePath == null) {
+  Widget _buildRowCell(Uint8List? bytes, double radius, Color bg) {
+    if (bytes == null) {
       return AspectRatio(
         aspectRatio: 3 / 4,
         child: Container(
@@ -117,14 +115,7 @@ class _RowEditPageState extends State<RowEditPage> {
       aspectRatio: 3 / 4,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: Image.file(
-          File(imagePath),
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: Colors.grey.shade200,
-            child: const Icon(Icons.broken_image, color: Colors.grey),
-          ),
-        ),
+        child: PuzzleImage(bytes: bytes, fit: BoxFit.cover),
       ),
     );
   }
@@ -135,7 +126,7 @@ class _RowEditPageState extends State<RowEditPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),

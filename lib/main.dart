@@ -23,10 +23,10 @@ class PuzzleApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFE91E63),
+            seedColor: const Color(0xFF7B5CF6),
             brightness: Brightness.light,
           ),
-          scaffoldBackgroundColor: const Color(0xFFF5F0F5),
+          scaffoldBackgroundColor: Colors.white,
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.transparent,
             elevation: 0,

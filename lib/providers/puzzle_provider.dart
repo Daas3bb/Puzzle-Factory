@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -28,23 +31,44 @@ class PuzzleProvider extends ChangeNotifier {
 
   // ---- Image operations ----
 
-  Future<void> pickImages({int maxCount = 9}) async {
-    final List<XFile> picked = await _picker.pickMultiImage(
-      limit: maxCount,
-      imageQuality: 100,
-    );
+  Future<void> pickImages({int maxCount = 9, bool append = false}) async {
+    final List<XFile> picked = kIsWeb
+        ? await _picker.pickMultiImage(imageQuality: 100)
+        : await _picker.pickMultiImage(
+            limit: maxCount,
+            imageQuality: 100,
+          );
     if (picked.isEmpty) return;
 
-    _images = picked
-        .asMap()
-        .entries
-        .map((e) => SelectedImage(xFile: e.value, order: e.key))
-        .toList();
+    final limited = picked.take(maxCount).toList();
+    final selected = await Future.wait(
+      limited.asMap().entries.map((entry) async {
+        final bytes = await entry.value.readAsBytes();
+        return SelectedImage(
+          xFile: entry.value,
+          bytes: bytes,
+          order: entry.key,
+        );
+      }),
+    );
+
+    if (append) {
+      for (final image in selected) {
+        if (_images.length >= maxCount) break;
+        image.order = _images.length;
+        _images.add(image);
+      }
+    } else {
+      _images = selected;
+    }
+
+    _reorder();
     notifyListeners();
   }
 
-  void addImage(XFile file) {
-    _images.add(SelectedImage(xFile: file, order: _images.length));
+  Future<void> addImage(XFile file) async {
+    final bytes = await file.readAsBytes();
+    _images.add(SelectedImage(xFile: file, bytes: bytes, order: _images.length));
     notifyListeners();
   }
 
@@ -98,13 +122,21 @@ class PuzzleProvider extends ChangeNotifier {
 
   // ---- Helpers ----
 
-  /// Get the file path for an image at [index], or null if out of bounds.
   String? imagePathAt(int index) {
     if (index < 0 || index >= _images.length) return null;
     return _images[index].path;
   }
 
-  /// Max images allowed for the current layout.
+  Uint8List? imageBytesAt(int index) {
+    if (index < 0 || index >= _images.length) return null;
+    return _images[index].bytes;
+  }
+
+  SelectedImage? imageAt(int index) {
+    if (index < 0 || index >= _images.length) return null;
+    return _images[index];
+  }
+
   int get maxImages =>
       _layoutType == PuzzleLayoutType.grid3x3 ? 9 : 3;
 }

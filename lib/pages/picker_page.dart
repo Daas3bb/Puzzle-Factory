@@ -1,12 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/selected_image.dart';
 import '../providers/puzzle_provider.dart';
-import 'grid_edit_page.dart';
-import 'row_edit_page.dart';
+import '../widgets/puzzle_image.dart';
+import 'collage_edit_page.dart';
 
 class PickerPage extends StatelessWidget {
   const PickerPage({super.key});
@@ -118,8 +116,8 @@ class PickerPage extends StatelessWidget {
       itemCount: provider.imageCount,
       onReorder: provider.reorder,
       itemBuilder: (context, index) {
-        final imagePath = provider.imagePathAt(index)!;
-        return _buildImageTile(context, provider, index, imagePath);
+        final image = provider.imageAt(index)!;
+        return _buildImageTile(context, provider, index, image);
       },
     );
   }
@@ -128,32 +126,29 @@ class PickerPage extends StatelessWidget {
     BuildContext context,
     PuzzleProvider provider,
     int index,
-    String imagePath,
+    SelectedImage image,
   ) {
     return Container(
-      key: ValueKey(imagePath),
+      key: ValueKey('${image.order}_${image.name}'),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ListTile(
-        leading: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            image: DecorationImage(
-              image: FileImage(File(imagePath)),
-              fit: BoxFit.cover,
-            ),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            width: 60,
+            height: 60,
+            child: PuzzleImage(bytes: image.bytes, fit: BoxFit.cover),
           ),
         ),
         title: Text(
@@ -161,7 +156,7 @@ class PickerPage extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          imagePath.split(Platform.pathSeparator).last,
+          image.name,
           style: const TextStyle(fontSize: 11),
           overflow: TextOverflow.ellipsis,
         ),
@@ -187,7 +182,7 @@ class PickerPage extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -212,7 +207,7 @@ class PickerPage extends StatelessWidget {
               flex: 2,
               child: ElevatedButton.icon(
                 onPressed: provider.imageCount > 0
-                    ? () => _goToEditor(context, layoutType)
+                    ? () => _goToEditor(context)
                     : null,
                 icon: const Icon(Icons.check),
                 label: Text(provider.imageCount > 0 ? 'Start Puzzle' : 'Select Photos First'),
@@ -227,16 +222,10 @@ class PickerPage extends StatelessWidget {
     );
   }
 
-  void _goToEditor(BuildContext context, PuzzleLayoutType layoutType) {
-    Widget page;
-    if (layoutType == PuzzleLayoutType.grid3x3) {
-      page = const GridEditPage();
-    } else {
-      page = const RowEditPage();
-    }
+  void _goToEditor(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => page),
+      MaterialPageRoute(builder: (_) => const CollageEditPage()),
     );
   }
 }

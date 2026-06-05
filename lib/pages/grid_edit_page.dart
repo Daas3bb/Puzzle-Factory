@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/puzzle_provider.dart';
 import '../utils/image_exporter.dart';
+import '../widgets/puzzle_image.dart';
 import 'export_page.dart';
 
 class GridEditPage extends StatefulWidget {
@@ -83,15 +83,14 @@ class _GridEditPageState extends State<GridEditPage> {
         crossAxisSpacing: spacing,
         padding: EdgeInsets.all(spacing),
         children: List.generate(9, (index) {
-          final path = provider.imagePathAt(index);
-          return _buildGridCell(path, radius, bg);
+          return _buildGridCell(provider.imageBytesAt(index), radius, bg);
         }),
       ),
     );
   }
 
-  Widget _buildGridCell(String? imagePath, double radius, Color bg) {
-    if (imagePath == null) {
+  Widget _buildGridCell(Uint8List? bytes, double radius, Color bg) {
+    if (bytes == null) {
       // Empty placeholder
       return Container(
         decoration: BoxDecoration(
@@ -108,14 +107,7 @@ class _GridEditPageState extends State<GridEditPage> {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: Image.file(
-        File(imagePath),
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          color: Colors.grey.shade200,
-          child: const Icon(Icons.broken_image, color: Colors.grey),
-        ),
-      ),
+      child: PuzzleImage(bytes: bytes, fit: BoxFit.cover),
     );
   }
 
@@ -125,7 +117,7 @@ class _GridEditPageState extends State<GridEditPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),

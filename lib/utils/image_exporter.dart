@@ -3,8 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+
+import 'image_save_io.dart' if (dart.library.html) 'image_save_web.dart';
+
+export 'image_save_io.dart' if (dart.library.html) 'image_save_web.dart';
 
 /// Captures a widget wrapped in a [RepaintBoundary] and returns PNG bytes.
 Future<Uint8List?> capturePuzzle(GlobalKey key) async {
@@ -21,20 +23,4 @@ Future<Uint8List?> capturePuzzle(GlobalKey key) async {
     debugPrint('capturePuzzle error: $e');
     return null;
   }
-}
-
-/// Saves PNG bytes to a temporary file and returns the [File].
-Future<File> saveImage(Uint8List bytes, String filename) async {
-  final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/$filename');
-  await file.writeAsBytes(bytes);
-  return file;
-}
-
-/// Saves the image to the app's documents directory for sharing.
-Future<File> saveImageToDocuments(Uint8List bytes, String filename) async {
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File('${dir.path}/$filename');
-  await file.writeAsBytes(bytes);
-  return file;
 }
