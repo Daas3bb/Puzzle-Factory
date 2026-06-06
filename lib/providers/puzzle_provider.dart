@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/scenario_template.dart';
 import '../models/selected_image.dart';
 
 /// State management for puzzle editing.
@@ -28,6 +29,33 @@ class PuzzleProvider extends ChangeNotifier {
 
   Color _backgroundColor = Colors.white;
   Color get backgroundColor => _backgroundColor;
+
+  // ---- Scenario ----
+  ScenarioTemplate? _activeTemplate;
+  ScenarioTemplate? get activeTemplate => _activeTemplate;
+
+  String get scenarioTitle => _activeTemplate?.category.title ?? '自由创作';
+  String get templateName => _activeTemplate?.name ?? '自定义拼贴';
+  String get pickerHint =>
+      _activeTemplate?.hint ??
+      (_layoutType == PuzzleLayoutType.grid3x3
+          ? '最多选择 9 张图片'
+          : '最多选择 3 张图片');
+
+  void applyScenarioTemplate(ScenarioTemplate template) {
+    _activeTemplate = template;
+    _layoutType = template.layoutType;
+    _spacing = template.spacing;
+    _borderRadius = template.borderRadius;
+    _backgroundColor = template.backgroundColor;
+    _images.clear();
+    notifyListeners();
+  }
+
+  void clearScenario() {
+    _activeTemplate = null;
+    notifyListeners();
+  }
 
   // ---- Image operations ----
 

@@ -12,16 +12,12 @@ class PickerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PuzzleProvider>();
-    final layoutType = provider.layoutType;
     final maxImages = provider.maxImages;
+    final hasScenario = provider.activeTemplate != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          layoutType == PuzzleLayoutType.grid3x3
-              ? 'Select Photos (Grid 3x3)'
-              : 'Select Photos (Row)',
-        ),
+        title: Text(hasScenario ? provider.templateName : '选择图片'),
         actions: [
           if (provider.imageCount > 0)
             Padding(
@@ -41,21 +37,40 @@ class PickerPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Instruction banner
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            color: const Color(0xFFFFF3E0),
+            color: const Color(0xFFEDE7F6),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 18, color: Color(0xFFE65100)),
+                Icon(
+                  hasScenario ? Icons.auto_awesome : Icons.info_outline,
+                  size: 18,
+                  color: const Color(0xFF7B5CF6),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    layoutType == PuzzleLayoutType.grid3x3
-                        ? 'Select up to 9 photos for the 3x3 grid.'
-                        : 'Select up to 3 photos for the row layout.',
-                    style: const TextStyle(fontSize: 13, color: Color(0xFFBF360C)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (hasScenario)
+                        Text(
+                          provider.scenarioTitle,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF5E35B1),
+                          ),
+                        ),
+                      Text(
+                        provider.pickerHint,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF4527A0),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -88,19 +103,19 @@ class PickerPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No photos selected',
+            '还没有选择图片',
             style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap the button below to pick images',
+            '点击下方按钮从相册选取',
             style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => provider.pickImages(maxCount: maxImages),
             icon: const Icon(Icons.photo_library),
-            label: const Text('Select from Album'),
+            label: const Text('从相册选择'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
             ),
@@ -152,7 +167,7 @@ class PickerPage extends StatelessWidget {
           ),
         ),
         title: Text(
-          'Photo ${index + 1}',
+          '图片 ${index + 1}',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -175,7 +190,6 @@ class PickerPage extends StatelessWidget {
   }
 
   Widget _buildBottomBar(BuildContext context, PuzzleProvider provider) {
-    final layoutType = provider.layoutType;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -194,9 +208,12 @@ class PickerPage extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => provider.pickImages(maxCount: provider.maxImages),
+                onPressed: () => provider.pickImages(
+                  maxCount: provider.maxImages,
+                  append: true,
+                ),
                 icon: const Icon(Icons.add_photo_alternate),
-                label: const Text('Add More'),
+                label: const Text('继续添加'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -210,7 +227,7 @@ class PickerPage extends StatelessWidget {
                     ? () => _goToEditor(context)
                     : null,
                 icon: const Icon(Icons.check),
-                label: Text(provider.imageCount > 0 ? 'Start Puzzle' : 'Select Photos First'),
+                label: Text(provider.imageCount > 0 ? '开始创作' : '请先选择图片'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
